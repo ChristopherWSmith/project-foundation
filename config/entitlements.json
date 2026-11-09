@@ -1,0 +1,22 @@
+{
+  "$description": "Plans, limits and features for __PROJECT_NAME__. Code enforces limits from this file and the pricing page renders from it. Explained in docs/product/PRICING.md. Prices in minor units (cents).",
+  "currency": "usd",
+  "plans": {
+    "free": {
+      "name": "Free",
+      "price_monthly": 0,
+      "price_annual": 0,
+      "stripe_lookup_keys": {},
+      "limits": { "seats": 1 },
+      "features": []
+    },
+    "pro": {
+      "name": "Pro",
+      "price_monthly": 0,
+      "price_annual": 0,
+      "stripe_lookup_keys": { "monthly": "pro_monthly", "annual": "pro_annual" },
+      "limits": { "seats": 5 },
+      "features": []
+    }
+  }
+}

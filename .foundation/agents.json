@@ -1,0 +1,15 @@
+{
+  "$comment": "Agent identities. verify-protection.py checks each installed app's live permissions against this. Fill in the app slugs (github.com/apps/<slug>). Permissions are GitHub App permission names.",
+  "agents": [
+    {
+      "role": "implementer",
+      "app_slug": "REPLACE-implementer-app",
+      "must_not": ["administration", "workflows", "secrets", "environments", "statuses:write", "checks:write"]
+    },
+    {
+      "role": "reviewer",
+      "app_slug": "REPLACE-reviewer-app",
+      "must_not": ["administration", "workflows", "secrets", "environments", "statuses:write", "checks:write"]
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+# Part of the project foundation.
+# Changes to these paths need the owner's approval before they merge into staging (ruleset "staging: code owners").
+# They are what the agents are judged by (CI, gates, review config) and the rules they follow, so an agent
+# must not be able to change them on its own. The owner (admin) can merge their own PRs here through bypass.
+/.github/                         @__GITHUB_OWNER__
+/.foundation/                     @__GITHUB_OWNER__
+/scripts/checks/                  @__GITHUB_OWNER__
+/scripts/github/                  @__GITHUB_OWNER__
+/AGENTS.md                        @__GITHUB_OWNER__
+/CLAUDE.md                        @__GITHUB_OWNER__
+/MODELS.md                        @__GITHUB_OWNER__
+/docs/engineering/DEFINITION-OF-DONE.md     @__GITHUB_OWNER__
+/docs/engineering/AGENT-WORKFLOW.md         @__GITHUB_OWNER__
+/docs/engineering/AGENT-PERMISSIONS.md      @__GITHUB_OWNER__
+/docs/engineering/BRANCHING-AND-RELEASES.md @__GITHUB_OWNER__
+/mise.toml                        @__GITHUB_OWNER__

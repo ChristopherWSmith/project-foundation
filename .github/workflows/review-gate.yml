@@ -1,0 +1,43 @@
+# Part of the project foundation. Posts the `review-gate` commit status that the staging ruleset requires.
+#
+# Integrity: the gate script and its config are checked out from the BASE commit, so a PR can't change what
+# judges it. Changing this workflow needs code-owner approval (CODEOWNERS) and the `workflows` permission,
+# which agent identities don't have (docs/engineering/AGENT-PERMISSIONS.md).
+# Every new push to the PR re-runs the gate; a review only counts for the commit it was written on.
+name: Review gate
+
+on:
+  pull_request:
+    branches: [staging]
+    types: [opened, synchronize, reopened, labeled, unlabeled, edited]
+  pull_request_review:
+    types: [submitted, edited, dismissed]
+
+permissions:
+  contents: read
+  pull-requests: read
+  statuses: write
+
+concurrency:
+  group: review-gate-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  evaluate:
+    if: github.event.repository.name != 'project-foundation' && (github.event.pull_request.base.ref == 'staging')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+      - name: Mark pending
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: >-
+          gh api -X POST "repos/$GITHUB_REPOSITORY/statuses/$HEAD_SHA"
+          -f state=pending -f context=review-gate -f description="Evaluating independent review"
+      - name: Evaluate and post status
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/checks/review_gate.py --post-status

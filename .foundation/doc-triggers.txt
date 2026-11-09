@@ -1,0 +1,18 @@
+# Doc triggers — checked on every PR by scripts/checks/doc_triggers.py
+#
+#   <changed path glob>[#<section heading slug>]  ->  <doc that must also change>
+#
+# `**` matches across folders. `#slug` limits a trigger to edits inside one `## Heading` of a markdown file.
+# Escape hatch: add the `docs-not-needed` label to the PR (and say why in the description).
+
+supabase/migrations/**                                  -> docs/architecture/SCHEMA.md
+supabase/migrations/**                                  -> src/types/database.ts
+src/config/env.ts                                       -> .env.example
+**/auth/**                                              -> docs/architecture/SECURITY.md
+Dockerfile                                              -> docs/operations/deploy.md
+railway.*                                               -> docs/operations/deploy.md
+infra/**                                                -> docs/operations/deploy.md
+docs/architecture/ARCHITECTURE.md#external-integrations -> docs/architecture/SECURITY.md
+docs/architecture/ARCHITECTURE.md#external-integrations -> docs/legal/SUBPROCESSORS.md
+config/entitlements.json                                -> docs/product/PRICING.md
+# Built in (no line needed): an edited prompt in prompts/ must also bump its `version:` frontmatter.

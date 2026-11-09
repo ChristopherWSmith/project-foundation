@@ -1,0 +1,45 @@
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Dependencies
+node_modules/
+.pnpm-store/
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Build output
+dist/
+!brand/dist/
+build/
+out/
+.next/
+.turbo/
+coverage/
+
+# Logs and local output
+*.log
+logs/
+.artifacts/
+
+# Evals
+evals/output/
+.promptfoo/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# Agent local state (shared config stays committed)
+.claude/settings.local.json

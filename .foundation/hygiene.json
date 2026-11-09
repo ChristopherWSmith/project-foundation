@@ -1,0 +1,8 @@
+{
+  "ticket_pattern": "(?:[A-Z][A-Z0-9]+-\\d+|CU-[A-Za-z0-9]+|#\\d+)",
+  "code_dirs": ["src", "app", "apps", "packages", "lib", "server", "tests", "test"],
+  "exclude_dirs": ["node_modules", "dist", "build", ".next", "coverage", ".turbo", "brand/dist", "scripts/checks"],
+  "agents_md_max_lines": 220,
+  "stale_doc_days": 90,
+  "raw_hex_check": true
+}

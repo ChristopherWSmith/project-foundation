@@ -1,0 +1,130 @@
+# Part of the project foundation.
+# Required status checks — staging and main: security_staging, drift, selftest, supabase_drift · main only: promotion_gate
+# Jobs skip in the foundation repo itself (named project-foundation): it holds placeholders, not a product.
+name: Foundation
+
+on:
+  pull_request:
+    branches: [staging, main]
+    types: [opened, synchronize, reopened, edited, labeled, unlabeled]
+  push:
+    branches: [staging, main]
+
+permissions:
+  contents: read
+
+jobs:
+  security_staging:
+    if: github.event.repository.name != 'project-foundation'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Secret scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Repos owned by an organization also need: GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+      - uses: jdx/mise-action@v2
+      - name: Dependency audit (gate "audit" in .foundation/project.json)
+        run: python3 scripts/checks/quality_gates.py --gates audit
+
+  drift:
+    if: github.event.repository.name != 'project-foundation'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Docs lifecycle, frontmatter and links
+        run: python3 scripts/checks/check_docs.py
+      - name: AGENTS.md references and commands are real
+        run: python3 scripts/checks/check_agents_md.py
+      - name: Env vars documented
+        run: python3 scripts/checks/check_env.py
+      - name: Hygiene (conflict markers, ticketed TODOs and skips, raw hex, copy lint)
+        run: python3 scripts/checks/check_hygiene.py
+      - name: Generated brand CSS matches tokens.json
+        run: python3 scripts/brand/build_tokens.py --check
+      - name: Docs changed with the code that needs them
+        if: github.event_name == 'pull_request'
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+        run: python3 scripts/checks/doc_triggers.py --base "origin/${{ github.base_ref }}"
+      - name: Handoff contract (agent PRs)
+        if: github.event_name == 'pull_request'
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: python3 scripts/checks/check_handoff.py
+
+  promotion_gate:
+    if: github.event.repository.name != 'project-foundation' && (github.event_name == 'pull_request' && github.base_ref == 'main')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Only staging or hotfix/* reach production, never in bootstrap, never undoing a hotfix
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: python3 scripts/checks/promotion_gate.py --head-ref "$HEAD_REF" --base-ref main --main-ref origin/main
+
+  tag_release:
+    if: github.event.repository.name != 'project-foundation' && (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tag what's in production (rollback targets)
+        run: |
+          tag="prod-$(date -u +%Y-%m-%d)-${GITHUB_SHA::7}"
+          git tag "$tag" && git push origin "$tag"
+          echo "Tagged $tag. Roll back by redeploying the previous prod-* tag (docs/engineering/BRANCHING-AND-RELEASES.md)."
+
+  supabase_drift:
+    if: github.event.repository.name != 'project-foundation'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Does this repo use Supabase?
+        id: uses
+        run: |
+          if [ -f supabase/config.toml ]; then echo "yes=true" >> "$GITHUB_OUTPUT"
+          else echo "yes=false" >> "$GITHUB_OUTPUT"; echo "No supabase/config.toml, skipped"; fi
+      - uses: supabase/setup-cli@v1
+        if: steps.uses.outputs.yes == 'true'
+        with:
+          version: latest
+      - run: supabase start
+        if: steps.uses.outputs.yes == 'true'
+      - name: Generated types match migrations; every table has RLS
+        if: steps.uses.outputs.yes == 'true'
+        run: ./scripts/checks/supabase_drift.sh
+
+  selftest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Did the checks, gates or protection change?
+        id: need
+        env:
+          REPO_NAME: ${{ github.event.repository.name }}
+          BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || 'HEAD~1' }}
+        run: |
+          if [ "$REPO_NAME" = "project-foundation" ] || git diff --name-only "$BASE"...HEAD | grep -qE '^(scripts/checks|scripts/github|scripts/init\.py|\.foundation|\.github/rulesets)/?'; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"; echo "No foundation files changed: self-tests skipped."
+          fi
+      - uses: jdx/mise-action@v2
+        if: steps.need.outputs.run == 'true'
+      - name: Foundation self-tests
+        if: steps.need.outputs.run == 'true'
+        run: python3 -m unittest discover -s scripts/checks/tests -v

@@ -1,0 +1,24 @@
+# Part of the project foundation. Required status check: `checks` (staging and main).
+# Commands come from .foundation/project.json, not from this file. A missing or placeholder command
+# fails the job once the project is in the "development" stage (see scripts/checks/quality_gates.py).
+# Need extra setup (services, Docker)? Add steps before "Quality gates".
+name: CI
+
+on:
+  pull_request:
+    branches: [staging, main]
+  push:
+    branches: [staging, main]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    if: github.event.repository.name != 'project-foundation'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v2
+      - name: Quality gates
+        run: python3 scripts/checks/quality_gates.py --gates install,lint,typecheck,test,build,deadcode

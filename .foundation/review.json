@@ -1,0 +1,8 @@
+{
+  "$comment": "Review gate config (scripts/checks/review_gate.py). The gate reads this file from the BASE branch, so a PR can't loosen it for itself. Changing it needs code-owner approval (CODEOWNERS).",
+  "reviewers": ["__REVIEWER__"],
+  "human_approvers": ["__GITHUB_OWNER__"],
+  "implementers": [],
+  "blocking_severities": ["P0", "P1"],
+  "require_handoff_from_bots": true
+}

@@ -1,0 +1,17 @@
+{
+  "$comment": "Quality gates for __PROJECT_NAME__, run by scripts/checks/quality_gates.py in CI. In 'bootstrap' an unset gate is reported, not enforced, and promotion to main is blocked. In 'development' every required gate must be set to a real command and pass, and test files must exist. A gate that is set always has to pass, in either stage. 'hint' is a suggestion only; it never runs.",
+  "stage": "bootstrap",
+  "gates": {
+    "install":   { "run": null, "required": true,  "hint": "pnpm install --frozen-lockfile" },
+    "lint":      { "run": null, "required": true,  "hint": "pnpm lint" },
+    "typecheck": { "run": null, "required": true, "hint": "pnpm typecheck" },
+    "test":      { "run": null, "required": true,  "hint": "pnpm test" },
+    "build":     { "run": null, "required": true, "hint": "pnpm build" },
+    "deadcode":  { "run": null, "required": false, "hint": "pnpm dlx knip" },
+    "audit":     { "run": null, "required": true,  "hint": "pnpm audit --audit-level=high" }
+  },
+  "tests": {
+    "globs": ["**/*.test.*", "**/*.spec.*", "tests/**/test_*.py", "**/__tests__/**"],
+    "min_files": 1
+  }
+}

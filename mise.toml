@@ -1,0 +1,7 @@
+# Pinned toolchain: the same versions on the Acer, the M5, CI and hosting.
+# `mise install` reads this file. CI uses jdx/mise-action. Bump versions deliberately, in their own PR.
+[tools]
+python = "3.12"
+node = "24"
+pnpm = "10"
+# Supabase CLI: install as a dev dependency (`pnpm add -D supabase`) so its version is locked with the project.
